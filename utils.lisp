@@ -1,0 +1,6 @@
+(defun read-file-as-binary (file-path)
+  (with-open-file (stream file-path :element-type '(unsigned-byte 8))
+    (let ((buffer (make-array (file-length stream)
+                               :element-type '(unsigned-byte 8))))
+      (read-sequence buffer stream)
+      buffer)))

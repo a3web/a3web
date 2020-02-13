@@ -48,15 +48,7 @@
 (defparameter +dispatch-table+
   `(("^/$" ,#'route-hello-world)
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
-    ("^/binary$"
-     ,(lambda (env)
-        (declare (ignore env))
-        `(200
-          (:content-type "text/plain")
-          ,(make-array 3 :element-type '(unsigned-byte 8)
-                       :initial-contents '(51 52 53)))))
-    (nil nil)))
-    ;;(nil ,#'route-not-found)))
+    (nil ,#'route-not-found)))
 
 (require :sb-sprof)
 

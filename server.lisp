@@ -2,6 +2,7 @@
 (ql:quickload :flexi-streams)
 (ql:quickload :file-types)
 (ql:quickload :cl-ppcre)
+(load "utils.lisp")
 
 (defparameter +static-directory+ "~/arma3/static/")
 
@@ -30,6 +31,13 @@
           `(200 (:content-type ,mime-string) ,file-path))
         (route-not-found))))
 
+(defun route-display-post (env)
+  (let* ((decoded-stream
+          (flex:make-flexi-stream (getf env :raw-body) :external-format :utf-8))
+         (result (read-string-stream decoded-stream)))
+    (format t "~&post body:~A~%" result)
+    (route-hello-world nil)))
+
 (defun dispatch (request-path dispatch-table)
   ;; path: request url
   ;; dispatch-table: '(matcher function)
@@ -47,29 +55,26 @@
 
 (defparameter +dispatch-table+
   `(("^/$" ,#'route-hello-world)
+    ("^/post-test$" ,#'route-display-post)
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
     (nil ,#'route-not-found)))
 
-(require :sb-sprof)
-
-(sb-sprof:with-profiling
-    (:max-samples 2000
-                  :report :flat
-                  :loop nil)
-  (handler-case
-      (woo:run
-       (lambda (env)
-         ;;(print env)
-         ;;(print (type-of env))
-         (if (eq :post (getf env :request-method))
-             (let* ((post-stream (getf env :raw-body))
-                    (char-stream (flexi-streams:make-flexi-stream
-                                  post-stream
-                                  :external-format :utf-8)))))
+(if (not (find-package 'swank))
+(woo:run
+ (lambda (env)
+   ;;(print env)
+   ;;(print (type-of env))
+   (if (eq :post (getf env :request-method))
+       (let* ((post-stream (getf env :raw-body))
+              (char-stream (flexi-streams:make-flexi-stream
+                            post-stream
+                            :external-format :utf-8)))))
                                         ;(format t (read-line char-stream))))
                                         ;(format t "dispatching...")
-         (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
-                                        ;(format t "select route: ~A~%" route-function)
-           (funcall route-function env))))
-    (condition () nil)))
+   (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
+     (format t "method:~A uri:~A route: ~A~%"
+             (getf env :request-method)
+             (getf env :request-uri)
+             route-function)
+     (funcall route-function env)))))
 

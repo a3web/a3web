@@ -11,7 +11,7 @@
 (defun route-hello-world (env)
   (declare (ignore env))
   '(200 (:content-type "text/plain")
-    ("hello")))
+    ("hello world")))
 
 (defun route-not-found (&optional env)
   (declare (ignore env))
@@ -60,21 +60,23 @@
     (nil ,#'route-not-found)))
 
 (if (not (find-package 'swank))
-(woo:run
- (lambda (env)
-   ;;(print env)
-   ;;(print (type-of env))
-   (if (eq :post (getf env :request-method))
-       (let* ((post-stream (getf env :raw-body))
-              (char-stream (flexi-streams:make-flexi-stream
-                            post-stream
-                            :external-format :utf-8)))))
+    (sb-thread:make-thread
+     (lambda ()
+       (woo:run
+        (lambda (env)
+          ;;(print env)
+          ;;(print (type-of env))
+          (if (eq :post (getf env :request-method))
+              (let* ((post-stream (getf env :raw-body))
+                     (char-stream (flexi-streams:make-flexi-stream
+                                   post-stream
+                                   :external-format :utf-8)))))
                                         ;(format t (read-line char-stream))))
                                         ;(format t "dispatching...")
-   (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
-     (format t "method:~A uri:~A route: ~A~%"
-             (getf env :request-method)
-             (getf env :request-uri)
-             route-function)
-     (funcall route-function env)))))
+          (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
+            (format t "method:~A uri:~A route: ~A~%"
+                    (getf env :request-method)
+                    (getf env :request-uri)
+                    route-function)
+            (funcall route-function env)))))))
 

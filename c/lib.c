@@ -27,6 +27,13 @@ int RVExtensionArgs(char *output, int outputSize,
 		const char *function,
 		const char **argv, int argc)
 {
+	if(argc < 1) {
+		printf("leoext: need at least 1 argument to post\n");
+		return 101; // SYNTAX_ERROR_WRONG_PARAMS_SIZE
+	}
+
+	const char* output_string = argv[0];
+
 	CURL *curl;
 	CURLcode res;
 
@@ -38,7 +45,7 @@ int RVExtensionArgs(char *output, int outputSize,
 		   data. */
 		curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:5000/post-test");
 		/* Now specify the POST data */
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "Arma3 request!");
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, output_string);
 
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
@@ -56,5 +63,6 @@ int RVExtensionArgs(char *output, int outputSize,
 void RVExtensionVersion(char *output, int outputSize)
 {
 	curl_global_init(CURL_GLOBAL_ALL);
-	strncpy_safe(output, "Leo-Extension v0.1", outputSize);
+	printf("leoext loaded!\n");
+	strncpy_safe(output, "leoext v0.1", outputSize);
 }

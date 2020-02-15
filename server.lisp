@@ -2,6 +2,7 @@
 (ql:quickload :flexi-streams)
 (ql:quickload :file-types)
 (ql:quickload :cl-ppcre)
+(ql:quickload :cl-json)
 (load "utils.lisp")
 
 (defparameter +static-directory+ "~/arma3/static/")
@@ -31,11 +32,19 @@
           `(200 (:content-type ,mime-string) ,file-path))
         (route-not-found))))
 
+(defparameter *marker-info*
+  '(("Terminal" "mil_start" "ColorRed" (14648.7 16756.7 0))
+    ("Small Island" "mil_objective" "ColorBlue" (8443.6 25118.3 0))
+    ("Molos Airfield" "mil_marker" "ColorGreen" (27096.1 24840.6 0))))
+
 (defun route-display-post (env)
   (let* ((decoded-stream
           (flex:make-flexi-stream (getf env :raw-body) :external-format :utf-8))
-         (result (read-string-stream decoded-stream)))
-    (format t "~&post body:~A~%" result)
+         (body (read-string-stream decoded-stream)))
+    (format t "~&post body:~A~%" body)
+    (let ((parsed (json:decode-json-from-string body)))
+      (setf *marker-info* parsed)
+      (print parsed))
     (route-hello-world nil)))
 
 (defun dispatch (request-path dispatch-table)
@@ -78,5 +87,11 @@
                     (getf env :request-method)
                     (getf env :request-uri)
                     route-function)
-            (funcall route-function env)))))))
+            (funcall route-function env)))))
+     :name "webserver"))
+
+(defparameter *web* (car (sb-thread:list-all-threads)))
+(list *web*)
+(sb-thread:terminate-thread *web*)
+
 

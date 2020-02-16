@@ -18,6 +18,8 @@ function makeMarker(coord=[0, 0], icon='loc_blue', text='') {
   });
 
   let [x, y] = coord;
+  y = y/8 - (15360/8);
+  x = x/8;
   let marker = L.marker(L.latLng(y, x), {icon: markerIcon});
   // https://gis.stackexchange.com/questions/59571/how-to-add-text-only-labels-on-leaflet-map-with-no-icon
   marker.bindTooltip(text, {permanent: true, offset: [15, 0]});
@@ -32,6 +34,8 @@ function makeUnitPos(coord=[0, 0], icon='purple') {
   });
 
   let [x, y] = coord;
+  y = y/8 - (15360/8);
+  x = x/8;
   let marker = L.marker(L.latLng(y, x), {icon: markerIcon});
   return marker;
 }

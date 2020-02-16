@@ -2,13 +2,24 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as marker from './marker.js';
 
+let bounds = [[0,0], [-3840, 3840]];
+
 let map = L.map('map', {
   crs: L.CRS.Simple,
-  minZoom: -4
+  minZoom: -1,
+  maxZoom: 3
 });
 
-let bounds = [[0,0], [15360, 15360]];
-let image = L.imageOverlay('./maps/Tanoa.png', bounds).addTo(map);
+L.tileLayer('./maps/build/{z}/x{x}_y{y}.jpg', {
+  minZoom: -1,
+  maxZoom: 3,
+  minNativeZoom: 1,
+  maxNativeZoom: 3,
+  tileSize: 1000,
+  bounds: [[0,0], [-3840, 3840]]
+}).addTo(map);
+
+// let image = L.imageOverlay('./maps/Tanoa.png', bounds).addTo(map);
 map.fitBounds(bounds);
 
 let UNITS_POS_MARKER = [];

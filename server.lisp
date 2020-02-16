@@ -90,8 +90,9 @@
             (funcall route-function env)))))
      :name "webserver"))
 
-(defparameter *web* (car (sb-thread:list-all-threads)))
-(list *web*)
-(sb-thread:terminate-thread *web*)
-
-
+(sb-thread:list-all-threads)
+(mapcar #'sb-thread:terminate-thread
+        (remove-if-not
+         (lambda (thread)
+           (string= "webserver" (sb-thread:thread-name thread)))
+         (sb-thread:list-all-threads)))

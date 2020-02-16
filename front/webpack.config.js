@@ -8,10 +8,12 @@ module.exports = {
   },
   module: {
     rules: [
+      { test: /\.css$/, loader: 'style-loader!css-loader' },
       {
-        test: /\.css$/i,
-        use: ['style-loader', 'css-loader'],
-      },
-    ],
+        test: /\.png$/,
+        loader: 'url-loader',
+        query: { mimetype: 'image/png' }
+      }
+    ]
   }
 };

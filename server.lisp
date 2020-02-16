@@ -105,7 +105,9 @@
                     (getf env :request-method)
                     (getf env :request-uri)
                     route-function)
-            (funcall route-function env)))))
+            (funcall route-function env)))
+        :port 5000
+        :address "0.0.0.0"))
      :name "webserver"))
 
 (sb-thread:list-all-threads)

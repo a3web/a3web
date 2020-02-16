@@ -27,16 +27,3 @@ leoext_units_pos = {
 
 	_units_pos;
 };
-
-leoext_stop = false;
-
-[] spawn {
-	while {!leoext_stop} do {
-		sleep 1;
-		diag_log "submitting coordinates...";
-
-		private _markers = call leoext_map_markers_information;
-		private _units = call leoext_units_pos;
-		"libleoext" callExtension ["foo", [[_markers, _units]]];
-	};
-}

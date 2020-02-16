@@ -107,7 +107,8 @@
                 route-function)
         (funcall route-function env)))
     :port 5000
-    :address "0.0.0.0"))
+    :address "0.0.0.0"
+    :worker-num 4))
  :name "webserver")
 
 

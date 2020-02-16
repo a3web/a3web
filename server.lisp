@@ -41,11 +41,28 @@
   (let* ((decoded-stream
           (flex:make-flexi-stream (getf env :raw-body) :external-format :utf-8))
          (body (read-string-stream decoded-stream)))
-    (format t "~&post body:~A~%" body)
+    ;;(format t "~&post body:~A~%" body)
     (let ((parsed (json:decode-json-from-string body)))
-      (setf *marker-info* parsed)
-      (print parsed))
+      (setf *marker-info* (nth 0 parsed))
+      (setf *units-info* (nth 1 parsed)))
+      ;; (print parsed))
     (route-hello-world nil)))
+
+(defparameter *units-info*
+  '(("WEST" (1000.0 1000.0 0.0))
+    ("EAST" (2222.0 1555.0 0.0))))
+
+(defun route-units-pos (env)
+  (declare (ignore env))
+  (let* ((tagged-units-pos
+          (mapcar (lambda (u)
+                    (destructuring-bind (side position) u
+                      `(("side" . ,side)
+                        ("position" . ,position))))
+                  *units-info*))
+         (json (json:encode-json-to-string tagged-units-pos)))
+    `(200 (:content-type "application/json")
+          (,json))))
 
 (defun dispatch (request-path dispatch-table)
   ;; path: request url
@@ -65,6 +82,7 @@
 (defparameter +dispatch-table+
   `(("^/$" ,#'route-hello-world)
     ("^/post-test$" ,#'route-display-post)
+    ("^/units-pos$" ,#'route-units-pos)
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
     (nil ,#'route-not-found)))
 

@@ -47,6 +47,10 @@ int RVExtensionArgs(char *output, int outputSize,
 		/* Now specify the POST data */
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, output_string);
 
+		struct curl_slist *headers = NULL;
+		headers = curl_slist_append(headers, "Expect:");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
 		/* Perform the request, res will get the return code */
 		res = curl_easy_perform(curl);
 		/* Check for errors */

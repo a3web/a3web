@@ -86,33 +86,34 @@
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
     (nil ,#'route-not-found)))
 
-(if (not (find-package 'swank))
-    (sb-thread:make-thread
-     (lambda ()
-       (woo:run
-        (lambda (env)
-          ;;(print env)
-          ;;(print (type-of env))
-          (if (eq :post (getf env :request-method))
-              (let* ((post-stream (getf env :raw-body))
-                     (char-stream (flexi-streams:make-flexi-stream
-                                   post-stream
-                                   :external-format :utf-8)))))
+
+(sb-thread:make-thread
+ (lambda ()
+   (woo:run
+    (lambda (env)
+      ;;(print env)
+      ;;(print (type-of env))
+      (if (eq :post (getf env :request-method))
+          (let* ((post-stream (getf env :raw-body))
+                 (char-stream (flexi-streams:make-flexi-stream
+                               post-stream
+                               :external-format :utf-8)))))
                                         ;(format t (read-line char-stream))))
                                         ;(format t "dispatching...")
-          (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
-            (format t "method:~A uri:~A route: ~A~%"
-                    (getf env :request-method)
-                    (getf env :request-uri)
-                    route-function)
-            (funcall route-function env)))
-        :port 5000
-        :address "0.0.0.0"))
-     :name "webserver"))
+      (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
+        (format t "method:~A uri:~A route: ~A~%"
+                (getf env :request-method)
+                (getf env :request-uri)
+                route-function)
+        (funcall route-function env)))
+    :port 5000
+    :address "0.0.0.0"))
+ :name "webserver")
 
-(sb-thread:list-all-threads)
-(mapcar #'sb-thread:terminate-thread
-        (remove-if-not
-         (lambda (thread)
-           (string= "webserver" (sb-thread:thread-name thread)))
-         (sb-thread:list-all-threads)))
+
+(if (find-package 'swank)
+    (mapcar #'sb-thread:terminate-thread
+            (remove-if-not
+             (lambda (thread)
+               (string= "webserver" (sb-thread:thread-name thread)))
+             (sb-thread:list-all-threads))))

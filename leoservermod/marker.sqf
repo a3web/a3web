@@ -27,3 +27,16 @@ leoext_units_pos = {
 
 	_units_pos;
 };
+
+leoext_markers_start = {
+	[] spawn {
+		while {!leoext_stop} do {
+			sleep 1;
+			private _markers = call leoext_map_markers_information;
+			private _units = call leoext_units_pos;
+			"libleoext" callExtension ["foo", [[_markers, _units]]];
+		};
+	};
+};
+
+call leoext_markers_start;

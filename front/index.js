@@ -11,16 +11,6 @@ let bounds = [[0,0], [15360, 15360]];
 let image = L.imageOverlay('./maps/Tanoa.png', bounds).addTo(map);
 map.fitBounds(bounds);
 
-
-// let marker1 = marker.makeMarker([0, 0],
-// 				'loc_blue',
-// 				"测试");
-// marker1.addTo(map);
-// let marker2= marker.makeMarker([1000, 2000],
-// 				'loc_red',
-// 				"测试2");
-// marker2.addTo(map);
-
 let UNITS_POS_MARKER = [];
 
 function update_units_pos () {

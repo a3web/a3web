@@ -7,12 +7,12 @@ let bounds = [[0,0], [-3840, 3840]];
 let map = L.map('map', {
   crs: L.CRS.Simple,
   minZoom: -1,
-  maxZoom: 3
+  maxZoom: 4
 });
 
 L.tileLayer('./maps/build/{z}/x{x}_y{y}.jpg', {
   minZoom: -1,
-  maxZoom: 3,
+  maxZoom: 4,
   minNativeZoom: 1,
   maxNativeZoom: 3,
   tileSize: 1000,

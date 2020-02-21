@@ -1,4 +1,5 @@
 (ql:quickload :woo)
+(ql:quickload :clack)
 (ql:quickload :flexi-streams)
 (ql:quickload :file-types)
 (ql:quickload :cl-ppcre)
@@ -9,10 +10,10 @@
 
 (defparameter +static-prefix+ "/static/")
 
-(defun route-hello-world (env)
+(defun route-ok (env)
   (declare (ignore env))
   '(200 (:content-type "text/plain")
-    ("hello world")))
+    ("ok!")))
 
 (defun route-not-found (&optional env)
   (declare (ignore env))
@@ -37,7 +38,7 @@
     ("Small Island" "mil_objective" "ColorBlue" (8443.6 25118.3 0))
     ("Molos Airfield" "mil_marker" "ColorGreen" (27096.1 24840.6 0))))
 
-(defun route-display-post (env)
+(defun route-post-arma3-info (env)
   (let* ((decoded-stream
           (flex:make-flexi-stream (getf env :raw-body) :external-format :utf-8))
          (body (read-string-stream decoded-stream)))
@@ -46,7 +47,7 @@
       (setf *marker-info* (nth 0 parsed))
       (setf *units-info* (nth 1 parsed)))
       ;; (print parsed))
-    (route-hello-world nil)))
+    (route-ok nil)))
 
 (defparameter *units-info*
   '(("WEST" (1000.0 1000.0 0.0))
@@ -80,41 +81,28 @@
     (nth 1 result)))
 
 (defparameter +dispatch-table+
-  `(("^/$" ,#'route-hello-world)
-    ("^/post-test$" ,#'route-display-post)
+  `(("^/$" ,#'route-ok)
+    ("^/post-arma3-info$" ,#'route-post-arma3-info)
     ("^/units-pos$" ,#'route-units-pos)
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
     (nil ,#'route-not-found)))
 
 
-(sb-thread:make-thread
- (lambda ()
-   (woo:run
-    (lambda (env)
-      ;;(print env)
-      ;;(print (type-of env))
-      (if (eq :post (getf env :request-method))
-          (let* ((post-stream (getf env :raw-body))
-                 (char-stream (flexi-streams:make-flexi-stream
-                               post-stream
-                               :external-format :utf-8)))))
-                                        ;(format t (read-line char-stream))))
-                                        ;(format t "dispatching...")
-      (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
-        (format t "method:~A uri:~A route: ~A~%"
-                (getf env :request-method)
-                (getf env :request-uri)
-                route-function)
-        (funcall route-function env)))
-    :port 5000
-    :address "0.0.0.0"
-    :worker-num 4))
- :name "webserver")
+(defparameter *web-server*
+  (clack:clackup
+   (lambda (env)
+     (let ((route-function (dispatch (getf env :request-uri) +dispatch-table+)))
+       (format t "method:~A uri:~A route: ~A~%"
+               (getf env :request-method)
+               (getf env :request-uri)
+               route-function)
+       (funcall route-function env)))
+   :server :woo
+   :use-default-middlewares nil
+   :use-thread t
+   :port 5000
+   :address "0.0.0.0"))
 
 
 (if (find-package 'swank)
-    (mapcar #'sb-thread:terminate-thread
-            (remove-if-not
-             (lambda (thread)
-               (string= "webserver" (sb-thread:thread-name thread)))
-             (sb-thread:list-all-threads))))
+    (clack:stop *web-server*))

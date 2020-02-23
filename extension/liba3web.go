@@ -16,11 +16,14 @@ package main
 import "C"
 
 import (
+	"os"
 	"fmt"
 	"log"
 	"strings"
 	"unsafe"
 	"net/http"
+	"encoding/json"
+	"io/ioutil"
 )
 
 var cb C.callbackProc
@@ -45,6 +48,19 @@ func RVExtensionVersion(output *C.char, outputsize C.size_t) {
 	defer C.free(unsafe.Pointer(version))
 	var size = C.min(C.strlen(version)+1, outputsize-1)
 	C.strncpy(output, version, size)
+
+	// Load config
+	const configPath string = "~/.a3web.conf"
+	type Config struct {
+		serverURL string `json:"serverURL"`
+	}
+	var config Config
+
+	if _, err := os.Stat(configPath); err == nil {
+		configFile, _ := ioutil.ReadFile(configPath)
+		json.Unmarshal(configFile, &config)
+		serverURL = config.serverURL
+	}
 }
 
 // RVExtensionArgs STRING callExtension ARRAY
@@ -56,8 +72,8 @@ func RVExtensionArgs(output *C.char, outputsize C.size_t, function *C.char, argv
 		out = append(out, C.GoString(*argv))
 		argv = (**C.char)(unsafe.Pointer(uintptr(unsafe.Pointer(argv)) + offset))
 	}
-	
-	go handleArgs(C.GoString(function), argc, out)
+
+	go handleArgs(C.GoString(function), out)
 }
 
 // RVExtension STRING callExtension STRING
@@ -71,14 +87,20 @@ func RVExtension(output *C.char, outputsize C.size_t, function *C.char) {
 
 func main() {}
 
-func handleArgs(function string, argc C.int, argv []string) {
-	fns := strings.Split(strings.ToLower(function), ":")
-	if len(fns) == 3 && fns[0] == "http" && fns[1] == "post" {
-		resp, err := http.Post(serverURL + fns[2], "", strings.NewReader(argv[0]))
-		if err != nil {
-			log.Printf("Error Sending HTTP Request: %s", err)
-			return
-		}
-		resp.Body.Close()
+func handleArgs(function string, argv []string) {
+	switch dispatcher := "function"
+	dispatcher {
+	case "upload_pos":
+		uploadUnitsInfo(argv[0])
 	}
+}
+
+func uploadUnitsInfo(body string) {
+	var endpoint string = "/units-info"
+	resp, err := http.Post(serverURL + endpoint, "", strings.NewReader(body))
+	if err != nil {
+		log.Printf("Error Sending HTTP Request: %s", err)
+		return
+	}
+	resp.Body.Close()
 }

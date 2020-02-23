@@ -82,8 +82,8 @@
 
 (defparameter +dispatch-table+
   `(("^/$" ,#'route-ok)
-    ("^/post-arma3-info$" ,#'route-post-arma3-info)
-    ("^/units-pos$" ,#'route-units-pos)
+    ("^/positional-info$" ,#'route-post-arma3-info)
+    ("^/units-info$" ,#'route-units-pos)
     (,(concatenate 'string "^" +static-prefix+ ".*$") ,#'serve-static-file)
     (nil ,#'route-not-found)))
 

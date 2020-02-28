@@ -18,9 +18,10 @@ import "C"
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"strings"
 	"unsafe"
-	"net/http"
 )
 
 var cb C.callbackProc
@@ -45,6 +46,17 @@ func RVExtensionVersion(output *C.char, outputsize C.size_t) {
 	defer C.free(unsafe.Pointer(version))
 	var size = C.min(C.strlen(version)+1, outputsize-1)
 	C.strncpy(output, version, size)
+
+	args := os.Args[1:]
+	for _, arg := range args {
+		if strings.Index(arg, "-a3webserver") == 0 {
+			s := strings.Split(arg, "=")
+			if len(s) == 2 {
+				serverURL = s[1]
+				break
+			}
+		}
+	}
 }
 
 // RVExtensionArgs STRING callExtension ARRAY
@@ -56,7 +68,7 @@ func RVExtensionArgs(output *C.char, outputsize C.size_t, function *C.char, argv
 		out = append(out, C.GoString(*argv))
 		argv = (**C.char)(unsafe.Pointer(uintptr(unsafe.Pointer(argv)) + offset))
 	}
-	
+
 	go handleArgs(C.GoString(function), argc, out)
 }
 
@@ -74,7 +86,7 @@ func main() {}
 func handleArgs(function string, argc C.int, argv []string) {
 	fns := strings.Split(strings.ToLower(function), ":")
 	if len(fns) == 3 && fns[0] == "http" && fns[1] == "post" {
-		resp, err := http.Post(serverURL + fns[2], "", strings.NewReader(argv[0]))
+		resp, err := http.Post(serverURL+fns[2], "", strings.NewReader(argv[0]))
 		if err != nil {
 			log.Printf("Error Sending HTTP Request: %s", err)
 			return
